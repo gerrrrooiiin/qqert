@@ -1,0 +1,31 @@
+name: Dota 2 patch check
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for new patch
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python3 check_patch.py
+
+      - name: Save last patch id
+        run: |
+          if [ -n "$(git status --porcelain last_gid.txt)" ]; then
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
+            git add last_gid.txt
+            git commit -m "update last patch"
+            git push
+          fi
